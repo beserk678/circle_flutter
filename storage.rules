@@ -1,0 +1,86 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    function isValidFileSize() {
+      return request.resource.size < 50 * 1024 * 1024; // 50MB limit
+    }
+    
+    function isValidImageType() {
+      return request.resource.contentType.matches('image/.*');
+    }
+    
+    function isValidFileType() {
+      return request.resource.contentType.matches('image/.*') ||
+             request.resource.contentType.matches('video/.*') ||
+             request.resource.contentType.matches('audio/.*') ||
+             request.resource.contentType.matches('application/pdf') ||
+             request.resource.contentType.matches('text/.*') ||
+             request.resource.contentType.matches('application/msword') ||
+             request.resource.contentType.matches('application/vnd.openxmlformats-officedocument.*');
+    }
+    
+    function isCircleMember(circleId) {
+      return isAuthenticated() && 
+             request.auth.uid in firestore.get(/databases/(default)/documents/circles/$(circleId)).data.members;
+    }
+    
+    // User profile images
+    match /users/{userId}/profile/{imageId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId) && 
+                      isValidFileSize() && 
+                      isValidImageType();
+      allow delete: if isOwner(userId);
+    }
+    
+    // Circle files
+    match /circles/{circleId}/files/{fileId} {
+      allow read: if isCircleMember(circleId);
+      allow write: if isCircleMember(circleId) && 
+                      isValidFileSize() && 
+                      isValidFileType();
+      allow delete: if isCircleMember(circleId);
+    }
+    
+    // Circle images (posts, messages)
+    match /circles/{circleId}/images/{imageId} {
+      allow read: if isCircleMember(circleId);
+      allow write: if isCircleMember(circleId) && 
+                      isValidFileSize() && 
+                      isValidImageType();
+      allow delete: if isCircleMember(circleId);
+    }
+    
+    // User backups (private)
+    match /backups/{backupId} {
+      allow read: if isAuthenticated() && 
+                     resource.metadata.userId == request.auth.uid;
+      allow write: if false; // Only server can create backups
+      allow delete: if isAuthenticated() && 
+                       resource.metadata.userId == request.auth.uid;
+    }
+    
+    // Temporary uploads (24 hour expiry)
+    match /temp/{userId}/{fileId} {
+      allow read, write: if isOwner(userId) && 
+                            isValidFileSize() && 
+                            isValidFileType();
+      allow delete: if isOwner(userId);
+    }
+    
+    // Default deny all other files
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

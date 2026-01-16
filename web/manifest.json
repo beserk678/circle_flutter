@@ -1,0 +1,115 @@
+{
+    "name": "Circle - Collaboration Platform",
+    "short_name": "Circle",
+    "description": "A powerful collaboration platform for teams and communities",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#6366f1",
+    "orientation": "portrait-primary",
+    "categories": ["productivity", "social", "collaboration"],
+    "lang": "en",
+    "dir": "ltr",
+    "icons": [
+        {
+            "src": "icons/Icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable any"
+        },
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable any"
+        }
+    ],
+    "screenshots": [
+        {
+            "src": "screenshots/desktop-1.png",
+            "sizes": "1280x720",
+            "type": "image/png",
+            "form_factor": "wide",
+            "label": "Circle Dashboard"
+        },
+        {
+            "src": "screenshots/mobile-1.png",
+            "sizes": "390x844",
+            "type": "image/png",
+            "form_factor": "narrow",
+            "label": "Circle Mobile"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Feed",
+            "short_name": "Feed",
+            "description": "View your circle's activity feed",
+            "url": "/feed",
+            "icons": [
+                {
+                    "src": "icons/feed-96.png",
+                    "sizes": "96x96"
+                }
+            ]
+        },
+        {
+            "name": "Chat",
+            "short_name": "Chat",
+            "description": "Open circle chat",
+            "url": "/chat",
+            "icons": [
+                {
+                    "src": "icons/chat-96.png",
+                    "sizes": "96x96"
+                }
+            ]
+        },
+        {
+            "name": "Tasks",
+            "short_name": "Tasks",
+            "description": "Manage your tasks",
+            "url": "/tasks",
+            "icons": [
+                {
+                    "src": "icons/tasks-96.png",
+                    "sizes": "96x96"
+                }
+            ]
+        }
+    ],
+    "share_target": {
+        "action": "/share",
+        "method": "POST",
+        "enctype": "multipart/form-data",
+        "params": {
+            "title": "title",
+            "text": "text",
+            "url": "url",
+            "files": [
+                {
+                    "name": "files",
+                    "accept": ["image/*", "video/*", "audio/*", ".pdf", ".doc", ".docx", ".txt"]
+                }
+            ]
+        }
+    },
+    "protocol_handlers": [
+        {
+            "protocol": "web+circle",
+            "url": "/join?invite=%s"
+        }
+    ],
+    "prefer_related_applications": false,
+    "related_applications": [
+        {
+            "platform": "play",
+            "url": "https://play.google.com/store/apps/details?id=com.circle.app",
+            "id": "com.circle.app"
+        },
+        {
+            "platform": "itunes",
+            "url": "https://apps.apple.com/app/circle-collaboration/id123456789"
+        }
+    ]
+}

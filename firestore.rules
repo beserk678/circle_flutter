@@ -1,0 +1,141 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    function isCircleMember(circleId) {
+      return isAuthenticated() && 
+             request.auth.uid in get(/databases/$(database)/documents/circles/$(circleId)).data.members;
+    }
+    
+    function isCircleAdmin(circleId) {
+      return isAuthenticated() && 
+             request.auth.uid in get(/databases/$(database)/documents/circles/$(circleId)).data.admins;
+    }
+    
+    function isValidUser() {
+      return isAuthenticated() && 
+             request.auth.uid != null;
+    }
+    
+    function isValidContent(data) {
+      return data.keys().hasAll(['createdAt', 'authorId']) &&
+             data.authorId == request.auth.uid &&
+             data.createdAt == request.time;
+    }
+    
+    function isValidUpdate(data) {
+      return data.keys().hasAll(['updatedAt']) &&
+             data.updatedAt == request.time;
+    }
+    
+    // Users collection
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId) && isValidUser();
+      allow update: if isOwner(userId) && isValidUpdate(request.resource.data);
+      allow delete: if isOwner(userId);
+      
+      // User private data
+      match /private/{document} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+    
+    // Circles collection
+    match /circles/{circleId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+      allow delete: if isAuthenticated();
+      
+      // Posts subcollection
+      match /posts/{postId} {
+        allow read, write: if isAuthenticated();
+        
+        // Comments subcollection
+        match /comments/{commentId} {
+          allow read, write: if isAuthenticated();
+        }
+        
+        // Likes subcollection
+        match /likes/{likeId} {
+          allow read, write: if isAuthenticated();
+        }
+      }
+      
+      // Messages subcollection
+      match /messages/{messageId} {
+        allow read, write: if isAuthenticated();
+      }
+      
+      // Tasks subcollection
+      match /tasks/{taskId} {
+        allow read, write: if isAuthenticated();
+      }
+      
+      // Files subcollection
+      match /files/{fileId} {
+        allow read, write: if isAuthenticated();
+      }
+    }
+    
+    // Notifications collection
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated() && 
+                     resource.data.userId == request.auth.uid;
+      allow create: if false; // Only server can create notifications
+      allow update: if isAuthenticated() && 
+                       resource.data.userId == request.auth.uid &&
+                       isValidUpdate(request.resource.data);
+      allow delete: if isAuthenticated() && 
+                       resource.data.userId == request.auth.uid;
+    }
+    
+    // Backups collection (user can only access their own backups)
+    match /backups/{backupId} {
+      allow read: if isAuthenticated() && 
+                     resource.data.user_id == request.auth.uid;
+      allow create: if false; // Only server can create backups
+      allow update: if false; // Backups are immutable
+      allow delete: if isAuthenticated() && 
+                       resource.data.user_id == request.auth.uid;
+    }
+    
+    // Analytics collection (read-only for authenticated users)
+    match /analytics/{document} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Only server can write analytics
+    }
+    
+    // System collections (admin only)
+    match /system/{document} {
+      allow read, write: if false; // Only server access
+    }
+    
+    // Health check collection (public read for monitoring)
+    match /_health_check/{document} {
+      allow read: if true;
+      allow write: if false;
+    }
+    
+    // Connection test collection (public read for connectivity checks)
+    match /_connection_test/{document} {
+      allow read: if true;
+      allow write: if false;
+    }
+    
+    // Default deny all other documents
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
