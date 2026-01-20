@@ -48,7 +48,7 @@ class _FilesScreenState extends State<FilesScreen>
         }
 
         return Scaffold(
-          backgroundColor: const Color(0xFFF8F9FA),
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           body: Column(
             children: [
               // File stats
@@ -58,6 +58,10 @@ class _FilesScreenState extends State<FilesScreen>
               // Upload progress
               if (fileController.isUploading)
                 _buildUploadProgress(fileController.uploadProgress),
+
+              // Error message
+              if (fileController.errorMessage != null)
+                _buildErrorMessage(fileController.errorMessage!),
 
               // Tab bar
               TabBar(
@@ -260,6 +264,46 @@ class _FilesScreenState extends State<FilesScreen>
     );
   }
 
+  Widget _buildErrorMessage(String error) {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.red.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.error_outline, color: Colors.red),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Upload Failed',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(error, style: const TextStyle(color: Colors.red)),
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              context.read<FileController>().clearError();
+            },
+            child: const Text('Dismiss'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildFileGrid(List<SharedFile> files) {
     if (files.isEmpty) {
       return Center(
@@ -339,53 +383,142 @@ class _FilesScreenState extends State<FilesScreen>
   void _showUploadOptions(BuildContext context, String circleId) {
     showModalBottomSheet(
       context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder:
           (context) => SafeArea(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                Container(
+                  margin: const EdgeInsets.symmetric(vertical: 8),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text(
+                    'Upload Files',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ),
                 ListTile(
-                  leading: const Icon(Icons.camera_alt),
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.camera_alt, color: Colors.blue),
+                  ),
                   title: const Text('Take Photo'),
-                  onTap: () {
+                  subtitle: const Text('Capture with camera'),
+                  onTap: () async {
                     Navigator.pop(context);
-                    context.read<FileController>().uploadImageFromCamera(
-                      circleId,
-                    );
+                    final success = await context
+                        .read<FileController>()
+                        .uploadImageFromCamera(circleId);
+                    if (context.mounted) {
+                      _showUploadResult(context, success, 'Photo');
+                    }
                   },
                 ),
                 ListTile(
-                  leading: const Icon(Icons.photo_library),
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.photo_library, color: Colors.green),
+                  ),
                   title: const Text('Choose Photos'),
-                  onTap: () {
+                  subtitle: const Text('Select from gallery'),
+                  onTap: () async {
                     Navigator.pop(context);
-                    context.read<FileController>().uploadMultipleImages(
-                      circleId,
-                    );
+                    final success = await context
+                        .read<FileController>()
+                        .uploadMultipleImages(circleId);
+                    if (context.mounted) {
+                      _showUploadResult(context, success, 'Photos');
+                    }
                   },
                 ),
                 ListTile(
-                  leading: const Icon(Icons.attach_file),
-                  title: const Text('Upload File'),
-                  onTap: () {
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.attach_file, color: Colors.orange),
+                  ),
+                  title: const Text('Upload Document'),
+                  subtitle: const Text('PDF, Word, Excel, etc.'),
+                  onTap: () async {
                     Navigator.pop(context);
-                    context.read<FileController>().uploadFile(circleId);
+                    final success = await context
+                        .read<FileController>()
+                        .uploadFile(circleId);
+                    if (context.mounted) {
+                      _showUploadResult(context, success, 'Document');
+                    }
                   },
                 ),
                 ListTile(
-                  leading: const Icon(Icons.folder),
-                  title: const Text('Upload Multiple Files'),
-                  onTap: () {
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.purple.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.folder, color: Colors.purple),
+                  ),
+                  title: const Text('Multiple Files'),
+                  subtitle: const Text('Select multiple files'),
+                  onTap: () async {
                     Navigator.pop(context);
-                    context.read<FileController>().uploadMultipleFiles(
-                      circleId,
-                    );
+                    final success = await context
+                        .read<FileController>()
+                        .uploadMultipleFiles(circleId);
+                    if (context.mounted) {
+                      _showUploadResult(context, success, 'Files');
+                    }
                   },
                 ),
+                const SizedBox(height: 16),
               ],
             ),
           ),
     );
+  }
+
+  void _showUploadResult(BuildContext context, bool success, String fileType) {
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('$fileType uploaded successfully!'),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } else {
+      // Error is already shown in the UI via the error message widget
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to upload $fileType. Check the error message above.',
+          ),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   String _formatFileSize(int bytes) {

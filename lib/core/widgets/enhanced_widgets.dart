@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../theme/app_theme.dart';
 import '../theme/design_tokens.dart';
 
 /// Enhanced card with hover effects and shadows

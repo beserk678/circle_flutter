@@ -5,7 +5,7 @@ import 'notification_model.dart';
 
 class NotificationController extends ChangeNotifier {
   final NotificationService _notificationService = NotificationService.instance;
-  
+
   List<AppNotification> _notifications = [];
   int _unreadCount = 0;
   NotificationPreferences? _preferences;
@@ -31,29 +31,49 @@ class NotificationController extends ChangeNotifier {
   // Initialize notifications for current user
   void initializeNotifications() {
     final user = AuthService.instance.currentUser;
-    if (user == null) return;
+    if (user == null) {
+      debugPrint('NotificationController: No user found for initialization');
+      return;
+    }
+
+    debugPrint('NotificationController: Initializing for user ${user.uid}');
 
     // Listen to notifications
-    _notificationService.getUserNotifications(user.uid).listen(
-      (notifications) {
-        _notifications = notifications;
-        notifyListeners();
-      },
-      onError: (error) {
-        _setError('Failed to load notifications: $error');
-      },
-    );
+    _notificationService
+        .getUserNotifications(user.uid)
+        .listen(
+          (notifications) {
+            debugPrint(
+              'NotificationController: Received ${notifications.length} notifications',
+            );
+            _notifications = notifications;
+            notifyListeners();
+          },
+          onError: (error) {
+            debugPrint(
+              'NotificationController: Error loading notifications: $error',
+            );
+            _setError('Failed to load notifications: $error');
+          },
+        );
 
     // Listen to unread count
-    _notificationService.getUnreadNotificationCount(user.uid).listen(
-      (count) {
-        _unreadCount = count;
-        notifyListeners();
-      },
-      onError: (error) {
-        debugPrint('Failed to load unread count: $error');
-      },
-    );
+    _notificationService
+        .getUnreadNotificationCount(user.uid)
+        .listen(
+          (count) {
+            debugPrint(
+              'NotificationController: Unread count updated to $count',
+            );
+            _unreadCount = count;
+            notifyListeners();
+          },
+          onError: (error) {
+            debugPrint(
+              'NotificationController: Failed to load unread count: $error',
+            );
+          },
+        );
 
     // Load preferences
     _loadPreferences();
@@ -65,7 +85,9 @@ class NotificationController extends ChangeNotifier {
     if (user == null) return;
 
     try {
-      _preferences = await _notificationService.getNotificationPreferences(user.uid);
+      _preferences = await _notificationService.getNotificationPreferences(
+        user.uid,
+      );
       notifyListeners();
     } catch (e) {
       debugPrint('Failed to load notification preferences: $e');
@@ -141,18 +163,51 @@ class NotificationController extends ChangeNotifier {
   List<AppNotification> get todayNotifications {
     final today = DateTime.now();
     final startOfDay = DateTime(today.year, today.month, today.day);
-    return _notifications.where((n) => n.createdAt.isAfter(startOfDay)).toList();
+    return _notifications
+        .where((n) => n.createdAt.isAfter(startOfDay))
+        .toList();
   }
 
   // Get notifications from this week
   List<AppNotification> get thisWeekNotifications {
     final now = DateTime.now();
     final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
-    final startOfWeekDay = DateTime(startOfWeek.year, startOfWeek.month, startOfWeek.day);
-    return _notifications.where((n) => n.createdAt.isAfter(startOfWeekDay)).toList();
+    final startOfWeekDay = DateTime(
+      startOfWeek.year,
+      startOfWeek.month,
+      startOfWeek.day,
+    );
+    return _notifications
+        .where((n) => n.createdAt.isAfter(startOfWeekDay))
+        .toList();
   }
 
   void clearError() {
     _setError(null);
+  }
+
+  // Test function to create a sample notification
+  Future<void> createTestNotification() async {
+    final user = AuthService.instance.currentUser;
+    if (user == null) return;
+
+    try {
+      await _notificationService.createNotification(
+        userId: user.uid,
+        circleId: 'test-circle',
+        circleName: 'Test Circle',
+        type: NotificationType.newMessage,
+        title: 'Test Notification',
+        body: 'This is a test notification to check if the counter works',
+        actionUserId: 'test-user',
+        actionUserName: 'Test User',
+      );
+      debugPrint('NotificationController: Test notification created');
+    } catch (e) {
+      debugPrint(
+        'NotificationController: Failed to create test notification: $e',
+      );
+      _setError('Failed to create test notification: $e');
+    }
   }
 }

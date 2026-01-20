@@ -65,7 +65,7 @@ class _ChatScreenState extends State<ChatScreen> {
         }
 
         return Scaffold(
-          backgroundColor: const Color(0xFFF8F9FA),
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           body: Column(
             children: [
               // Messages list
@@ -74,8 +74,8 @@ class _ChatScreenState extends State<ChatScreen> {
                     chatController.messages.isEmpty
                         ? _buildEmptyState(context)
                         : Container(
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFF8F9FA),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).scaffoldBackgroundColor,
                           ),
                           child: ListView.builder(
                             controller: _scrollController,
@@ -138,18 +138,23 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
+            Text(
               'No messages yet',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF1F2937),
+                color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Start the conversation with your circle!',
-              style: TextStyle(color: Color(0xFF6B7280), fontSize: 16),
+              style: TextStyle(
+                color: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
+                fontSize: 16,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -174,7 +179,9 @@ class _ChatScreenState extends State<ChatScreen> {
                 ? '${indicators.first.userName} is typing...'
                 : '${indicators.length} people are typing...',
             style: TextStyle(
-              color: Colors.grey[600],
+              color: Theme.of(
+                context,
+              ).textTheme.bodySmall?.color?.withValues(alpha: 0.6),
               fontSize: 12,
               fontStyle: FontStyle.italic,
             ),
@@ -192,7 +199,7 @@ class _ChatScreenState extends State<ChatScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -207,17 +214,32 @@ class _ChatScreenState extends State<ChatScreen> {
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF9FAFB),
+                  color:
+                      Theme.of(context).brightness == Brightness.dark
+                          ? const Color(0xFF1F2937)
+                          : const Color(0xFFF9FAFB),
                   borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: const Color(0xFFE5E7EB)),
+                  border: Border.all(
+                    color:
+                        Theme.of(context).brightness == Brightness.dark
+                            ? const Color(0xFF374151)
+                            : const Color(0xFFE5E7EB),
+                  ),
                 ),
                 child: TextField(
                   controller: _messageController,
-                  decoration: const InputDecoration(
+                  style: TextStyle(
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
+                  ),
+                  decoration: InputDecoration(
                     hintText: 'Type a message...',
-                    hintStyle: TextStyle(color: Color(0xFF9CA3AF)),
+                    hintStyle: TextStyle(
+                      color: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.color?.withValues(alpha: 0.5),
+                    ),
                     border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(
+                    contentPadding: const EdgeInsets.symmetric(
                       horizontal: 20,
                       vertical: 12,
                     ),
@@ -261,7 +283,9 @@ class _ChatScreenState extends State<ChatScreen> {
                           : null,
                   color:
                       !_isComposing || chatController.isLoading
-                          ? const Color(0xFFE5E7EB)
+                          ? (Theme.of(context).brightness == Brightness.dark
+                              ? const Color(0xFF374151)
+                              : const Color(0xFFE5E7EB))
                           : null,
                   borderRadius: BorderRadius.circular(24),
                 ),
@@ -287,7 +311,10 @@ class _ChatScreenState extends State<ChatScreen> {
                             color:
                                 _isComposing
                                     ? Colors.white
-                                    : const Color(0xFF9CA3AF),
+                                    : (Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? const Color(0xFF6B7280)
+                                        : const Color(0xFF9CA3AF)),
                             size: 20,
                           ),
                 ),
@@ -425,7 +452,7 @@ class MessageBubble extends StatelessWidget {
                             end: Alignment.bottomRight,
                           )
                           : null,
-                  color: isMe ? null : Colors.white,
+                  color: isMe ? null : Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(20).copyWith(
                     bottomLeft: Radius.circular(!isMe && showAvatar ? 4 : 20),
                     bottomRight: Radius.circular(isMe && showAvatar ? 4 : 20),
@@ -458,7 +485,10 @@ class MessageBubble extends StatelessWidget {
                     Text(
                       message.content,
                       style: TextStyle(
-                        color: isMe ? Colors.white : Colors.black87,
+                        color:
+                            isMe
+                                ? Colors.white
+                                : Theme.of(context).textTheme.bodyLarge?.color,
                         fontSize: 16,
                       ),
                     ),
@@ -468,7 +498,11 @@ class MessageBubble extends StatelessWidget {
                     Text(
                       _formatTime(message.createdAt),
                       style: TextStyle(
-                        color: isMe ? Colors.white70 : Colors.grey[600],
+                        color:
+                            isMe
+                                ? Colors.white70
+                                : Theme.of(context).textTheme.bodySmall?.color
+                                    ?.withValues(alpha: 0.6),
                         fontSize: 11,
                       ),
                     ),
@@ -489,12 +523,20 @@ class MessageBubble extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: Colors.grey[300],
+            color:
+                Theme.of(context).brightness == Brightness.dark
+                    ? const Color(0xFF374151)
+                    : Colors.grey[300],
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
             message.content,
-            style: TextStyle(color: Colors.grey[700], fontSize: 12),
+            style: TextStyle(
+              color: Theme.of(
+                context,
+              ).textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+              fontSize: 12,
+            ),
             textAlign: TextAlign.center,
           ),
         ),

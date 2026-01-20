@@ -56,43 +56,81 @@ class _TasksScreenState extends State<TasksScreen>
         }
 
         return Scaffold(
-          backgroundColor: const Color(0xFFF8F9FA),
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           body: Column(
             children: [
               // Task stats
               if (taskController.taskStats.isNotEmpty)
                 _buildTaskStats(taskController.taskStats),
 
-              // Tab bar
-              TabBar(
-                controller: _tabController,
-                tabs: const [
-                  Tab(text: 'All'),
-                  Tab(text: 'Pending'),
-                  Tab(text: 'In Progress'),
-                  Tab(text: 'Completed'),
-                ],
-                onTap: (index) {
-                  _debouncer.run(() {
-                    TaskStatus? filterStatus;
-                    switch (index) {
-                      case 1:
-                        filterStatus = TaskStatus.pending;
-                        break;
-                      case 2:
-                        filterStatus = TaskStatus.inProgress;
-                        break;
-                      case 3:
-                        filterStatus = TaskStatus.completed;
-                        break;
-                    }
-                    taskController.setFilterStatus(
-                      filterStatus,
-                      selectedCircle.id,
-                    );
-                  });
-                },
+              // Tab bar with better styling
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Theme.of(
+                        context,
+                      ).shadowColor.withValues(alpha: 0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: TabBar(
+                  controller: _tabController,
+                  indicator: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  indicatorPadding: const EdgeInsets.all(4),
+                  labelColor: Colors.white,
+                  unselectedLabelColor:
+                      Theme.of(context).textTheme.bodyMedium?.color,
+                  labelStyle: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                  unselectedLabelStyle: const TextStyle(
+                    fontWeight: FontWeight.w400,
+                    fontSize: 14,
+                  ),
+                  tabs: const [
+                    Tab(text: 'All'),
+                    Tab(text: 'Pending'),
+                    Tab(text: 'In Progress'),
+                    Tab(text: 'Completed'),
+                  ],
+                  onTap: (index) {
+                    _debouncer.run(() {
+                      TaskStatus? filterStatus;
+                      switch (index) {
+                        case 1:
+                          filterStatus = TaskStatus.pending;
+                          break;
+                        case 2:
+                          filterStatus = TaskStatus.inProgress;
+                          break;
+                        case 3:
+                          filterStatus = TaskStatus.completed;
+                          break;
+                      }
+                      taskController.setFilterStatus(
+                        filterStatus,
+                        selectedCircle.id,
+                      );
+                    });
+                  },
+                ),
               ),
+              const SizedBox(height: 16),
 
               // Task list
               Expanded(

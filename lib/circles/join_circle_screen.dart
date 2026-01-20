@@ -409,15 +409,17 @@ class _JoinCircleScreenState extends State<JoinCircleScreen> {
     final success = await circleController.joinCircle(circle.inviteCode);
 
     if (success && mounted) {
+      // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Successfully joined ${circle.name}!'),
+          content: Text('Joined ${circle.name}! Tap it to open.'),
           backgroundColor: DesignTokens.successColor,
+          duration: const Duration(seconds: 2),
         ),
       );
-      // Navigate directly to the circle home
-      Navigator.of(context).pop(); // Close join screen
-      Navigator.of(context).pop(); // Close circle selection screen
+      
+      // Go back to selection screen where the circle will now appear in the list
+      Navigator.of(context).pop();
     }
   }
 
@@ -425,22 +427,42 @@ class _JoinCircleScreenState extends State<JoinCircleScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final circleController = context.read<CircleController>();
+    
+    print('JoinCircleScreen - Before join, selectedCircle: ${circleController.selectedCircle?.name}');
+    
     final success = await circleController.joinCircle(
       _inviteCodeController.text.trim(),
     );
 
+    print('JoinCircleScreen - After join, success: $success, selectedCircle: ${circleController.selectedCircle?.name}');
+
     if (success && mounted) {
+      final selectedCircle = circleController.selectedCircle;
+      
+      if (selectedCircle == null) {
+        print('ERROR: selectedCircle is null after successful join!');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Error: Circle not found after joining'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+      
+      print('JoinCircleScreen - Circle joined: ${selectedCircle.name}, ID: ${selectedCircle.id}');
+      
+      // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            'Successfully joined ${circleController.selectedCircle?.name}!',
-          ),
+          content: Text('Joined ${selectedCircle.name}! Tap it to open.'),
           backgroundColor: DesignTokens.successColor,
+          duration: const Duration(seconds: 2),
         ),
       );
-      // Navigate directly to the circle home
-      Navigator.of(context).pop(); // Close join screen
-      Navigator.of(context).pop(); // Close circle selection screen
+      
+      // Go back to selection screen where the circle will now appear in the list
+      Navigator.of(context).pop();
     }
   }
 }

@@ -79,7 +79,7 @@ class _FeedScreenState extends State<FeedScreen> {
         }
 
         return Scaffold(
-          backgroundColor: const Color(0xFFF8F9FA),
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           body: CustomRefreshIndicator(
             onRefresh: () async {
               _debouncer.run(() {

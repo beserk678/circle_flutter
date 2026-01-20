@@ -34,10 +34,14 @@ class _CircleHomeScreenState extends State<CircleHomeScreen> {
       builder: (context, circleController, child) {
         final selectedCircle = circleController.selectedCircle;
 
+        print(
+          'CircleHomeScreen - Building with selectedCircle: ${selectedCircle?.name}',
+        );
+
         return Scaffold(
-          backgroundColor: const Color(0xFFF8F9FA),
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           appBar: AppBar(
-            backgroundColor: Colors.white,
+            backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
             elevation: 0,
             scrolledUnderElevation: 0,
             title: Row(
@@ -63,8 +67,9 @@ class _CircleHomeScreenState extends State<CircleHomeScreen> {
                 Expanded(
                   child: Text(
                     selectedCircle?.name ?? 'Circle',
-                    style: const TextStyle(
-                      color: Color(0xFF1F2937),
+                    style: TextStyle(
+                      color:
+                          Theme.of(context).appBarTheme.titleTextStyle?.color,
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
                     ),
@@ -75,11 +80,14 @@ class _CircleHomeScreenState extends State<CircleHomeScreen> {
             leading: Container(
               margin: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color(0xFFF3F4F6),
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: IconButton(
-                icon: const Icon(Icons.groups, color: Color(0xFF6366F1)),
+                icon: Icon(
+                  Icons.groups,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
                 onPressed: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
@@ -99,19 +107,29 @@ class _CircleHomeScreenState extends State<CircleHomeScreen> {
                       children: [
                         Container(
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF3F4F6),
+                            color: Theme.of(context).colorScheme.surface,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: IconButton(
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.notifications_outlined,
-                              color: Color(0xFF6366F1),
+                              color: Theme.of(context).colorScheme.primary,
                             ),
                             onPressed: () {
                               Navigator.of(context).push(
                                 MaterialPageRoute(
                                   builder:
                                       (context) => const NotificationsScreen(),
+                                ),
+                              );
+                            },
+                            onLongPress: () {
+                              // Test function - create a test notification
+                              notificationController.createTestNotification();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Test notification created!'),
+                                  duration: Duration(seconds: 2),
                                 ),
                               );
                             },
@@ -165,11 +183,14 @@ class _CircleHomeScreenState extends State<CircleHomeScreen> {
               Container(
                 margin: const EdgeInsets.only(right: 16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF3F4F6),
+                  color: Theme.of(context).colorScheme.surface,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert, color: Color(0xFF6366F1)),
+                  icon: Icon(
+                    Icons.more_vert,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                   onSelected: (value) {
                     if (value == 'logout') {
                       context.read<AuthController>().signOut();
@@ -248,10 +269,10 @@ class _CircleHomeScreenState extends State<CircleHomeScreen> {
           body: _screens[_currentIndex],
           bottomNavigationBar: Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).cardColor,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
+                  color: Theme.of(context).shadowColor.withValues(alpha: 0.1),
                   blurRadius: 10,
                   offset: const Offset(0, -2),
                 ),
@@ -319,14 +340,24 @@ class _CircleHomeScreenState extends State<CircleHomeScreen> {
           children: [
             Icon(
               isActive ? activeIcon : icon,
-              color: isActive ? Colors.white : const Color(0xFF9CA3AF),
+              color:
+                  isActive
+                      ? Colors.white
+                      : Theme.of(
+                        context,
+                      ).iconTheme.color?.withValues(alpha: 0.6),
               size: 24,
             ),
             const SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
-                color: isActive ? Colors.white : const Color(0xFF9CA3AF),
+                color:
+                    isActive
+                        ? Colors.white
+                        : Theme.of(
+                          context,
+                        ).textTheme.bodySmall?.color?.withValues(alpha: 0.6),
                 fontSize: 12,
                 fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
               ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'firebase_options.dart';
 import 'core/theme/app_theme.dart';
@@ -27,6 +28,7 @@ import 'files/file_controller.dart';
 import 'notifications/notification_controller.dart';
 import 'notifications/notification_service.dart';
 import 'profile/profile_controller.dart';
+import 'onboarding/onboarding_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -81,11 +83,48 @@ class CircleApp extends StatelessWidget {
   }
 }
 
-class AuthWrapper extends StatelessWidget {
+class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
 
   @override
+  State<AuthWrapper> createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends State<AuthWrapper> {
+  bool _isCheckingOnboarding = true;
+  bool _showOnboarding = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkOnboardingStatus();
+  }
+
+  Future<void> _checkOnboardingStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    final onboardingComplete = prefs.getBool('onboarding_complete') ?? false;
+    setState(() {
+      _showOnboarding = !onboardingComplete;
+      _isCheckingOnboarding = false;
+    });
+  }
+
+  void _completeOnboarding() {
+    setState(() {
+      _showOnboarding = false;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_isCheckingOnboarding) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    if (_showOnboarding) {
+      return OnboardingScreen(onComplete: _completeOnboarding);
+    }
+
     // Listen to auth state changes (but not AuthController changes)
     return StreamBuilder(
       stream: AuthService.instance.authStateChanges,
@@ -106,21 +145,31 @@ class AuthWrapper extends StatelessWidget {
 
           return Consumer<CircleController>(
             builder: (context, circleController, child) {
+              print(
+                'AuthWrapper - userCircles: ${circleController.userCircles.length}',
+              );
+              print(
+                'AuthWrapper - selectedCircle: ${circleController.selectedCircle?.name}',
+              );
+              print('AuthWrapper - isLoading: ${circleController.isLoading}');
+
               // Show loading while circles are being initialized
               if (circleController.isLoading &&
-                  circleController.userCircles.isEmpty) {
+                  circleController.userCircles.isEmpty &&
+                  circleController.selectedCircle == null) {
                 return const Scaffold(
                   body: Center(child: CircularProgressIndicator()),
                 );
               }
 
-              // If user has no circles or no selected circle, show selection screen
-              if (circleController.userCircles.isEmpty ||
-                  circleController.selectedCircle == null) {
-                return const CircleSelectionScreen();
+              // If user has circles and a selected circle, show circle home
+              if (circleController.userCircles.isNotEmpty &&
+                  circleController.selectedCircle != null) {
+                return const CircleHomeScreen();
               }
 
-              return const CircleHomeScreen();
+              // Otherwise show selection screen (for creating/joining circles)
+              return const CircleSelectionScreen();
             },
           );
         }

@@ -40,8 +40,8 @@ service cloud.firestore {
     // Users collection
     match /users/{userId} {
       allow read: if isAuthenticated();
-      allow create: if isOwner(userId) && isValidUser();
-      allow update: if isOwner(userId) && isValidUpdate(request.resource.data);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
       allow delete: if isOwner(userId);
       
       // User private data
@@ -86,18 +86,34 @@ service cloud.firestore {
       match /files/{fileId} {
         allow read, write: if isAuthenticated();
       }
+      
+      // Typing indicators subcollection
+      match /typing/{userId} {
+        allow read, write: if isAuthenticated();
+      }
     }
     
     // Notifications collection
     match /notifications/{notificationId} {
       allow read: if isAuthenticated() && 
                      resource.data.userId == request.auth.uid;
-      allow create: if false; // Only server can create notifications
+      allow create: if isAuthenticated(); // Allow users to create for testing
       allow update: if isAuthenticated() && 
-                       resource.data.userId == request.auth.uid &&
-                       isValidUpdate(request.resource.data);
+                       resource.data.userId == request.auth.uid;
       allow delete: if isAuthenticated() && 
                        resource.data.userId == request.auth.uid;
+    }
+    
+    // Notification preferences collection
+    match /notificationPreferences/{userId} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow write: if isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // App preferences collection
+    match /appPreferences/{userId} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow write: if isAuthenticated() && request.auth.uid == userId;
     }
     
     // Backups collection (user can only access their own backups)

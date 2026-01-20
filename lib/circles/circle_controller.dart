@@ -29,32 +29,57 @@ class CircleController extends ChangeNotifier {
   // Initialize circles for current user
   void initializeCircles() {
     final user = AuthService.instance.currentUser;
-    if (user == null) return;
+    if (user == null) {
+      print('CircleController - initializeCircles: No user');
+      return;
+    }
+
+    print('CircleController - initializeCircles: userId=${user.uid}');
 
     _circleService
         .getUserCircles(user.uid)
         .listen(
           (circles) {
+            print('CircleController - Received ${circles.length} circles');
             _userCircles = circles;
 
             // If we have a selected circle, try to keep it selected
             if (_selectedCircle != null) {
+              print(
+                'CircleController - Had selected circle: ${_selectedCircle!.name}',
+              );
               final updatedSelectedCircle = circles.firstWhere(
                 (c) => c.id == _selectedCircle!.id,
                 orElse: () {
-                  // If selected circle not found, don't auto-select another
+                  print(
+                    'CircleController - Selected circle not found in list, keeping it anyway',
+                  );
+                  // If selected circle not found, keep the reference but it might be stale
                   return _selectedCircle!;
                 },
               );
               _selectedCircle = updatedSelectedCircle;
+              print(
+                'CircleController - Updated selected circle: ${_selectedCircle!.name}',
+              );
             } else if (circles.isNotEmpty && circles.length == 1) {
               // Only auto-select if user has exactly one circle
               _selectedCircle = circles.first;
+              print(
+                'CircleController - Auto-selected single circle: ${_selectedCircle!.name}',
+              );
+            } else if (circles.isNotEmpty) {
+              print(
+                'CircleController - User has ${circles.length} circles but none selected',
+              );
+            } else {
+              print('CircleController - User has no circles');
             }
 
             notifyListeners();
           },
           onError: (error) {
+            print('CircleController - Error loading circles: $error');
             _setError('Failed to load circles: $error');
           },
         );
@@ -127,8 +152,16 @@ class CircleController extends ChangeNotifier {
 
   // Select a circle
   void selectCircle(Circle circle) {
+    print(
+      'CircleController - selectCircle called: ${circle.name} (id: ${circle.id})',
+    );
+    print(
+      'CircleController - Before: selectedCircle=${_selectedCircle?.name}, userCircles=${_userCircles.length}',
+    );
     _selectedCircle = circle;
+    print('CircleController - After: selectedCircle=${_selectedCircle?.name}');
     notifyListeners();
+    print('CircleController - notifyListeners called');
   }
 
   // Leave a circle

@@ -34,7 +34,16 @@ service firebase.storage {
              request.auth.uid in firestore.get(/databases/(default)/documents/circles/$(circleId)).data.members;
     }
     
-    // User profile images
+    // Profile photos (legacy path)
+    match /profile_photos/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && 
+                      isValidFileSize() && 
+                      isValidImageType();
+      allow delete: if isAuthenticated();
+    }
+    
+    // User profile images (new path)
     match /users/{userId}/profile/{imageId} {
       allow read: if isAuthenticated();
       allow write: if isOwner(userId) && 

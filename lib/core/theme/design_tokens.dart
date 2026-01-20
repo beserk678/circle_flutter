@@ -94,6 +94,7 @@ class DesignTokens {
   static const radius16 = 16.0;
   static const radius20 = 20.0;
   static const radius24 = 24.0;
+  static const radius32 = 32.0;
 
   // Shadows
   static List<BoxShadow> cardShadow(BuildContext context) => [

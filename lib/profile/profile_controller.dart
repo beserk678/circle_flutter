@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../core/services/auth_service.dart';
@@ -92,22 +93,8 @@ class ProfileController extends ChangeNotifier {
 
   // Upload profile photo from camera
   Future<bool> uploadPhotoFromCamera() async {
-    try {
-      final XFile? image = await _imagePicker.pickImage(
-        source: ImageSource.camera,
-        maxWidth: 512,
-        maxHeight: 512,
-        imageQuality: 85,
-      );
-
-      if (image != null) {
-        return await _uploadProfilePhoto(image);
-      }
-      return false;
-    } catch (e) {
-      _setError('Failed to capture photo: $e');
-      return false;
-    }
+    // On web, camera access is limited, so we'll use gallery instead
+    return uploadPhotoFromGallery();
   }
 
   // Upload profile photo from gallery
@@ -126,6 +113,7 @@ class ProfileController extends ChangeNotifier {
       return false;
     } catch (e) {
       _setError('Failed to pick photo: $e');
+      debugPrint('Photo picker error: $e');
       return false;
     }
   }

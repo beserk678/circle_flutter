@@ -262,14 +262,15 @@ class CircleSelectionScreen extends StatelessWidget {
                           )
                           : const Icon(Icons.arrow_forward_ios, size: 16),
                   onTap: () {
-                    circleController.selectCircle(circle);
-                    // Navigate to circle home and remove all previous routes
-                    Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(
-                        builder: (context) => const CircleHomeScreen(),
-                      ),
-                      (route) => false,
+                    print(
+                      'CircleSelectionScreen - Tapping circle: ${circle.name}',
                     );
+                    circleController.selectCircle(circle);
+                    print(
+                      'CircleSelectionScreen - After selectCircle, selectedCircle: ${circleController.selectedCircle?.name}',
+                    );
+                    // Don't navigate manually - let AuthWrapper handle it
+                    // The state change will trigger AuthWrapper to show CircleHomeScreen
                   },
                   onLongPress: () {
                     _showCircleOptions(context, circle, circleController);

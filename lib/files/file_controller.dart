@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart' as fp;
 import 'package:image_picker/image_picker.dart';
@@ -9,7 +10,7 @@ import 'file_model.dart';
 class FileController extends ChangeNotifier {
   final FileService _fileService = FileService.instance;
   final ImagePicker _imagePicker = ImagePicker();
-  
+
   List<SharedFile> _files = [];
   FileType? _filterType;
   bool _isLoading = false;
@@ -48,15 +49,17 @@ class FileController extends ChangeNotifier {
 
   // Initialize files for a circle
   void initializeFiles(String circleId) {
-    _fileService.getCircleFiles(circleId, filterType: _filterType).listen(
-      (files) {
-        _files = files;
-        notifyListeners();
-      },
-      onError: (error) {
-        _setError('Failed to load files: $error');
-      },
-    );
+    _fileService
+        .getCircleFiles(circleId, filterType: _filterType)
+        .listen(
+          (files) {
+            _files = files;
+            notifyListeners();
+          },
+          onError: (error) {
+            _setError('Failed to load files: $error');
+          },
+        );
 
     // Load file statistics
     _loadFileStats(circleId);
@@ -139,10 +142,8 @@ class FileController extends ChangeNotifier {
   // Pick and upload file
   Future<bool> uploadFile(String circleId) async {
     try {
-      final fp.FilePickerResult? result = await fp.FilePicker.platform.pickFiles(
-        type: fp.FileType.any,
-        allowMultiple: false,
-      );
+      final fp.FilePickerResult? result = await fp.FilePicker.platform
+          .pickFiles(type: fp.FileType.any, allowMultiple: false);
 
       if (result != null && result.files.single.path != null) {
         return await _uploadFile(circleId, File(result.files.single.path!));
@@ -157,10 +158,8 @@ class FileController extends ChangeNotifier {
   // Pick and upload multiple files
   Future<bool> uploadMultipleFiles(String circleId) async {
     try {
-      final fp.FilePickerResult? result = await fp.FilePicker.platform.pickFiles(
-        type: fp.FileType.any,
-        allowMultiple: true,
-      );
+      final fp.FilePickerResult? result = await fp.FilePicker.platform
+          .pickFiles(type: fp.FileType.any, allowMultiple: true);
 
       if (result != null) {
         bool allSuccess = true;
@@ -193,14 +192,33 @@ class FileController extends ChangeNotifier {
           _setUploadProgress(progress);
         },
       );
-      
+
       _setUploading(false);
       _setUploadProgress(0.0);
       return true;
     } catch (e) {
-      _setError('Failed to upload file: $e');
+      String errorMessage = 'Failed to upload file: $e';
+
+      // Check for specific Firebase Storage errors
+      if (e.toString().contains('storage/unknown') ||
+          e.toString().contains('storage/project-not-found') ||
+          e.toString().contains('storage/unauthorized')) {
+        errorMessage =
+            'Firebase Storage is not set up. Please enable Firebase Storage in your Firebase console.';
+      } else if (e.toString().contains('storage/quota-exceeded')) {
+        errorMessage =
+            'Storage quota exceeded. Please upgrade your Firebase plan.';
+      } else if (e.toString().contains('storage/unauthenticated')) {
+        errorMessage = 'You need to be signed in to upload files.';
+      } else if (e.toString().contains('storage/unauthorized')) {
+        errorMessage =
+            'You don\'t have permission to upload files to this circle.';
+      }
+
+      _setError(errorMessage);
       _setUploading(false);
       _setUploadProgress(0.0);
+      debugPrint('File upload error: $e');
       return false;
     }
   }
@@ -224,7 +242,7 @@ class FileController extends ChangeNotifier {
         description: description,
         tags: tags,
       );
-      
+
       _setLoading(false);
       return true;
     } catch (e) {

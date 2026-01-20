@@ -107,15 +107,25 @@ class CircleService {
 
   // Get circles where user is a member
   Stream<List<Circle>> getUserCircles(String userId) {
+    print('CircleService - getUserCircles called for userId: $userId');
     return _firestore
         .collection('circles')
         .where('members', arrayContains: userId)
-        .orderBy('createdAt', descending: true)
+        // Removed orderBy to avoid composite index requirement
         .snapshots()
-        .map(
-          (snapshot) =>
-              snapshot.docs.map((doc) => Circle.fromFirestore(doc)).toList(),
-        );
+        .map((snapshot) {
+          print('CircleService - Got ${snapshot.docs.length} circles');
+          final circles =
+              snapshot.docs.map((doc) {
+                print('CircleService - Circle: ${doc.id}, data: ${doc.data()}');
+                return Circle.fromFirestore(doc);
+              }).toList();
+
+          // Sort in memory instead of in query
+          circles.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+          return circles;
+        });
   }
 
   // Get single circle by ID
